@@ -1,5 +1,7 @@
 
+
 // import 'package:flutter/material.dart';
+// import 'package:flutter/foundation.dart'; // Add this import for kIsWeb
 // import 'package:google_maps_flutter/google_maps_flutter.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:intl/intl.dart';
@@ -39,14 +41,15 @@
 //     _selectedDay = DateTime.now();
 //     _loadTodayAttendance();
 //     _loadAttendanceData();
-//     if (isAdmin) {
+//     if (isAdmin && !kIsWeb) {
+//       // Only load employee locations on mobile
 //       _loadEmployeeLocations();
 //     }
 //   }
 
 //   Future<void> _loadTodayAttendance() async {
 //     if (!mounted) return;
-    
+
 //     setState(() => isLoading = true);
 //     try {
 //       final attendance = await AttendanceService.getTodayAttendance();
@@ -119,7 +122,11 @@
 
 //       // Get start and end of selected month
 //       final monthStart = DateTime(_selectedMonth.year, _selectedMonth.month, 1);
-//       final monthEnd = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0);
+//       final monthEnd = DateTime(
+//         _selectedMonth.year,
+//         _selectedMonth.month + 1,
+//         0,
+//       );
 //       final workingDays = _getWorkingDaysInMonth(monthStart, monthEnd);
 
 //       // Safety check for reasonable date range
@@ -168,7 +175,7 @@
 //       userRecords.forEach((userId, records) {
 //         try {
 //           if (records.isEmpty) return;
-          
+
 //           final user = records.first; // Get user info from first record
 
 //           final presentDays = <DateTime>{};
@@ -183,7 +190,8 @@
 //                 record.date.day,
 //               );
 
-//               if (record.status == 'punched_out' || record.status == 'punched_in') {
+//               if (record.status == 'punched_out' ||
+//                   record.status == 'punched_in') {
 //                 presentDays.add(recordDate);
 
 //                 // Check if late (after 9:30 AM)
@@ -266,7 +274,7 @@
 //         print('Error: Start date is after end date');
 //         return 0;
 //       }
-      
+
 //       final daysDifference = end.difference(start).inDays;
 //       if (daysDifference > 31) {
 //         print('Error: Date range too large: $daysDifference days');
@@ -275,24 +283,26 @@
 
 //       int workingDays = 0;
 //       DateTime current = start;
-      
+
 //       // Limit iterations to prevent infinite loops
 //       int iterations = 0;
 //       const maxIterations = 32; // Safety limit
-      
-//       while (current.isBefore(end.add(Duration(days: 1))) && iterations < maxIterations) {
+
+//       while (current.isBefore(end.add(Duration(days: 1))) &&
+//           iterations < maxIterations) {
 //         // Exclude weekends (Saturday = 6, Sunday = 7)
-//         if (current.weekday != DateTime.saturday && current.weekday != DateTime.sunday) {
+//         if (current.weekday != DateTime.saturday &&
+//             current.weekday != DateTime.sunday) {
 //           workingDays++;
 //         }
 //         current = current.add(Duration(days: 1));
 //         iterations++;
 //       }
-      
+
 //       if (iterations >= maxIterations) {
 //         print('Warning: Working days calculation hit iteration limit');
 //       }
-      
+
 //       return workingDays;
 //     } catch (e) {
 //       print('Error calculating working days: $e');
@@ -345,32 +355,35 @@
 //   }
 
 //   void _loadEmployeeLocations() {
-//     AttendanceService.getEmployeeLocationsStream().listen((locations) {
-//       setState(() {
-//         markers = locations.map((emp) {
-//           return Marker(
-//             markerId: MarkerId(emp.userId),
-//             position: LatLng(emp.location.latitude, emp.location.longitude),
-//             infoWindow: InfoWindow(
-//               title: emp.userName,
-//               snippet: '${emp.status} - ${emp.location.address}',
-//             ),
-//             icon: emp.status == 'punched_in'
-//                 ? BitmapDescriptor.defaultMarkerWithHue(
-//                     BitmapDescriptor.hueGreen,
-//                   )
-//                 : BitmapDescriptor.defaultMarkerWithHue(
-//                     BitmapDescriptor.hueRed,
-//                   ),
-//           );
-//         }).toSet();
+//     // Only load employee locations on mobile
+//     if (!kIsWeb) {
+//       AttendanceService.getEmployeeLocationsStream().listen((locations) {
+//         setState(() {
+//           markers = locations.map((emp) {
+//             return Marker(
+//               markerId: MarkerId(emp.userId),
+//               position: LatLng(emp.location.latitude, emp.location.longitude),
+//               infoWindow: InfoWindow(
+//                 title: emp.userName,
+//                 snippet: '${emp.status} - ${emp.location.address}',
+//               ),
+//               icon: emp.status == 'punched_in'
+//                   ? BitmapDescriptor.defaultMarkerWithHue(
+//                       BitmapDescriptor.hueGreen,
+//                     )
+//                   : BitmapDescriptor.defaultMarkerWithHue(
+//                       BitmapDescriptor.hueRed,
+//                     ),
+//             );
+//           }).toSet();
+//         });
 //       });
-//     });
+//     }
 //   }
 
 //   Future<void> _punchIn() async {
 //     if (!mounted) return;
-    
+
 //     setState(() => isLoading = true);
 //     try {
 //       await AttendanceService.punchIn();
@@ -392,7 +405,7 @@
 
 //   Future<void> _punchOut() async {
 //     if (!mounted) return;
-    
+
 //     setState(() => isLoading = true);
 //     try {
 //       await AttendanceService.punchOut();
@@ -567,8 +580,11 @@
 //             ),
 //           ),
 
-//           // Location Map (if punched in)
-//           if (todayAttendance != null) _buildLocationCard(),
+//           // Location Map (if punched in and not on web)
+//           if (todayAttendance != null && !kIsWeb) _buildLocationCard(),
+
+//           // Location Info Card for Web (if punched in and on web)
+//           if (todayAttendance != null && kIsWeb) _buildLocationInfoCard(),
 
 //           // Today's Details
 //           if (todayAttendance != null) _buildTodayDetailsCard(),
@@ -890,6 +906,7 @@
 //     );
 //   }
 
+//   // Modified Location Card - Only show on mobile
 //   Widget _buildLocationCard() {
 //     return Container(
 //       margin: EdgeInsets.all(16),
@@ -967,6 +984,140 @@
 //             ),
 //           ),
 //         ],
+//       ),
+//     );
+//   }
+
+//   // New Location Info Card - Show on web instead of map
+//   Widget _buildLocationInfoCard() {
+//     return Container(
+//       margin: EdgeInsets.all(16),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(20),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.1),
+//             blurRadius: 20,
+//             offset: Offset(0, 5),
+//           ),
+//         ],
+//       ),
+//       child: Padding(
+//         padding: EdgeInsets.all(20),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Row(
+//               children: [
+//                 Icon(Icons.location_on, color: Colors.red.shade400),
+//                 SizedBox(width: 12),
+//                 Text(
+//                   'Work Location',
+//                   style: TextStyle(
+//                     fontSize: 20,
+//                     fontWeight: FontWeight.bold,
+//                     color: Colors.indigo.shade600,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//             SizedBox(height: 20),
+
+//             // Location details without map
+//             Container(
+//               padding: EdgeInsets.all(16),
+//               decoration: BoxDecoration(
+//                 color: Colors.grey.shade50,
+//                 borderRadius: BorderRadius.circular(12),
+//                 border: Border.all(color: Colors.grey.shade200),
+//               ),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   Row(
+//                     children: [
+//                       Icon(
+//                         Icons.place,
+//                         color: Colors.indigo.shade600,
+//                         size: 20,
+//                       ),
+//                       SizedBox(width: 8),
+//                       Text(
+//                         'Address:',
+//                         style: TextStyle(
+//                           fontWeight: FontWeight.w600,
+//                           color: Colors.grey.shade700,
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                   SizedBox(height: 8),
+//                   Text(
+//                     todayAttendance!.punchInLocation.address,
+//                     style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+//                   ),
+//                   SizedBox(height: 16),
+
+//                   Row(
+//                     children: [
+//                       Icon(
+//                         Icons.my_location,
+//                         color: Colors.indigo.shade600,
+//                         size: 20,
+//                       ),
+//                       SizedBox(width: 8),
+//                       Text(
+//                         'Coordinates:',
+//                         style: TextStyle(
+//                           fontWeight: FontWeight.w600,
+//                           color: Colors.grey.shade700,
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                   SizedBox(height: 8),
+//                   Text(
+//                     'Lat: ${todayAttendance!.punchInLocation.latitude.toStringAsFixed(6)}\n'
+//                     'Lng: ${todayAttendance!.punchInLocation.longitude.toStringAsFixed(6)}',
+//                     style: TextStyle(
+//                       color: Colors.grey.shade600,
+//                       fontSize: 12,
+//                       fontFamily: 'monospace',
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+
+//             SizedBox(height: 12),
+
+//             // Note for web users
+//             Container(
+//               padding: EdgeInsets.all(12),
+//               decoration: BoxDecoration(
+//                 color: Colors.blue.shade50,
+//                 borderRadius: BorderRadius.circular(8),
+//                 border: Border.all(color: Colors.blue.shade200),
+//               ),
+//               child: Row(
+//                 children: [
+//                   Icon(Icons.info, color: Colors.blue.shade600, size: 16),
+//                   SizedBox(width: 8),
+//                   Expanded(
+//                     child: Text(
+//                       'Interactive map is available on mobile app',
+//                       style: TextStyle(
+//                         color: Colors.blue.shade700,
+//                         fontSize: 12,
+//                       ),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ],
+//         ),
 //       ),
 //     );
 //   }
@@ -1764,13 +1915,13 @@
 //                   itemCount: employees.length,
 //                   itemBuilder: (context, index) {
 //                     final emp = employees[index];
-                    
+
 //                     // Get today's attendance for punch-in time
 //                     return FutureBuilder<AttendanceRecord?>(
 //                       future: _getTodayAttendanceForUser(emp.userId),
 //                       builder: (context, attendanceSnapshot) {
 //                         final todayRecord = attendanceSnapshot.data;
-                        
+
 //                         return Container(
 //                           margin: EdgeInsets.only(bottom: 16),
 //                           decoration: BoxDecoration(
@@ -1780,10 +1931,7 @@
 //                                       Colors.green.shade50,
 //                                       Colors.green.shade100,
 //                                     ]
-//                                   : [
-//                                       Colors.red.shade50,
-//                                       Colors.red.shade100,
-//                                     ],
+//                                   : [Colors.red.shade50, Colors.red.shade100],
 //                               begin: Alignment.topLeft,
 //                               end: Alignment.bottomRight,
 //                             ),
@@ -1836,7 +1984,8 @@
 //                                     SizedBox(width: 16),
 //                                     Expanded(
 //                                       child: Column(
-//                                         crossAxisAlignment: CrossAxisAlignment.start,
+//                                         crossAxisAlignment:
+//                                             CrossAxisAlignment.start,
 //                                         children: [
 //                                           Text(
 //                                             emp.userName,
@@ -1924,9 +2073,9 @@
 //                                               ),
 //                                             ),
 //                                             Text(
-//                                               DateFormat('HH:mm:ss').format(
-//                                                 todayRecord.punchInTime,
-//                                               ),
+//                                               DateFormat(
+//                                                 'HH:mm:ss',
+//                                               ).format(todayRecord.punchInTime),
 //                                               style: TextStyle(
 //                                                 fontWeight: FontWeight.bold,
 //                                                 color: Colors.blue.shade600,
@@ -1935,7 +2084,7 @@
 //                                           ],
 //                                         ),
 //                                         SizedBox(height: 8),
-                                        
+
 //                                         // Working duration if active
 //                                         if (emp.status == 'punched_in') ...[
 //                                           Row(
@@ -1954,7 +2103,9 @@
 //                                                 ),
 //                                               ),
 //                                               Text(
-//                                                 _getWorkingDuration(todayRecord.punchInTime),
+//                                                 _getWorkingDuration(
+//                                                   todayRecord.punchInTime,
+//                                                 ),
 //                                                 style: TextStyle(
 //                                                   fontWeight: FontWeight.bold,
 //                                                   color: Colors.green.shade600,
@@ -1968,7 +2119,8 @@
 
 //                                       // Location
 //                                       Row(
-//                                         crossAxisAlignment: CrossAxisAlignment.start,
+//                                         crossAxisAlignment:
+//                                             CrossAxisAlignment.start,
 //                                         children: [
 //                                           Icon(
 //                                             Icons.location_on,
@@ -1978,7 +2130,8 @@
 //                                           SizedBox(width: 8),
 //                                           Expanded(
 //                                             child: Column(
-//                                               crossAxisAlignment: CrossAxisAlignment.start,
+//                                               crossAxisAlignment:
+//                                                   CrossAxisAlignment.start,
 //                                               children: [
 //                                                 Text(
 //                                                   'Location:',
@@ -2014,24 +2167,65 @@
 //                                   ),
 //                                 ),
 
-//                                 // View on Map Button
-//                                 SizedBox(height: 12),
-//                                 SizedBox(
-//                                   width: double.infinity,
-//                                   child: ElevatedButton.icon(
-//                                     onPressed: () => _showUserLocationOnMap(emp),
-//                                     icon: Icon(Icons.map, size: 18),
-//                                     label: Text('View on Map'),
-//                                     style: ElevatedButton.styleFrom(
-//                                       backgroundColor: Colors.indigo.shade600,
-//                                       foregroundColor: Colors.white,
-//                                       padding: EdgeInsets.symmetric(vertical: 12),
-//                                       shape: RoundedRectangleBorder(
-//                                         borderRadius: BorderRadius.circular(8),
+//                                 // View on Map Button - Only show on mobile
+//                                 if (!kIsWeb) ...[
+//                                   SizedBox(height: 12),
+//                                   SizedBox(
+//                                     width: double.infinity,
+//                                     child: ElevatedButton.icon(
+//                                       onPressed: () =>
+//                                           _showUserLocationOnMap(emp),
+//                                       icon: Icon(Icons.map, size: 18),
+//                                       label: Text('View on Map'),
+//                                       style: ElevatedButton.styleFrom(
+//                                         backgroundColor: Colors.indigo.shade600,
+//                                         foregroundColor: Colors.white,
+//                                         padding: EdgeInsets.symmetric(
+//                                           vertical: 12,
+//                                         ),
+//                                         shape: RoundedRectangleBorder(
+//                                           borderRadius: BorderRadius.circular(
+//                                             8,
+//                                           ),
+//                                         ),
 //                                       ),
 //                                     ),
 //                                   ),
-//                                 ),
+//                                 ],
+
+//                                 // Web note
+//                                 if (kIsWeb) ...[
+//                                   SizedBox(height: 12),
+//                                   Container(
+//                                     padding: EdgeInsets.all(8),
+//                                     decoration: BoxDecoration(
+//                                       color: Colors.blue.shade50,
+//                                       borderRadius: BorderRadius.circular(6),
+//                                       border: Border.all(
+//                                         color: Colors.blue.shade200,
+//                                       ),
+//                                     ),
+//                                     child: Row(
+//                                       children: [
+//                                         Icon(
+//                                           Icons.info,
+//                                           color: Colors.blue.shade600,
+//                                           size: 14,
+//                                         ),
+//                                         SizedBox(width: 6),
+//                                         Expanded(
+//                                           child: Text(
+//                                             'Interactive map available on mobile app',
+//                                             style: TextStyle(
+//                                               color: Colors.blue.shade700,
+//                                               fontSize: 11,
+//                                             ),
+//                                           ),
+//                                         ),
+//                                       ],
+//                                     ),
+//                                   ),
+//                                 ],
 //                               ],
 //                             ),
 //                           ),
@@ -2060,27 +2254,51 @@
 //       final today = DateTime.now();
 //       final startOfDay = DateTime(today.year, today.month, today.day);
 //       final endOfDay = startOfDay.add(Duration(days: 1));
-      
+
 //       final records = await AttendanceService.getAttendanceByDateRange(
 //         startOfDay,
 //         endOfDay,
 //       );
-      
+
 //       return records
-//           .where((record) => 
-//               record.userId == userId && 
-//               record.date.day == today.day)
-//           .isNotEmpty
-//           ? records.firstWhere((record) => 
-//               record.userId == userId && 
-//               record.date.day == today.day)
+//               .where(
+//                 (record) =>
+//                     record.userId == userId && record.date.day == today.day,
+//               )
+//               .isNotEmpty
+//           ? records.firstWhere(
+//               (record) =>
+//                   record.userId == userId && record.date.day == today.day,
+//             )
 //           : null;
 //     } catch (e) {
 //       return null;
 //     }
 //   }
 
+//   // Modified - Only show map dialog on mobile
 //   void _showUserLocationOnMap(EmployeeLocation employee) {
+//     if (kIsWeb) {
+//       // On web, show a simple alert instead
+//       showDialog(
+//         context: context,
+//         builder: (context) => AlertDialog(
+//           title: Text('Map Not Available'),
+//           content: Text(
+//             'Interactive maps are only available on mobile devices. Location details are shown in the user card above.',
+//           ),
+//           actions: [
+//             TextButton(
+//               onPressed: () => Navigator.of(context).pop(),
+//               child: Text('OK'),
+//             ),
+//           ],
+//         ),
+//       );
+//       return;
+//     }
+
+//     // Show map only on mobile
 //     showDialog(
 //       context: context,
 //       builder: (context) => Dialog(
@@ -2467,7 +2685,7 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart'; // Add this import for kIsWeb
+import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -2475,6 +2693,8 @@ import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:office_task_managemet/pages/attendance/attendance_model.dart';
 import 'package:office_task_managemet/pages/attendance/attendance_service.dart';
+import 'dart:async';
+import 'dart:io' show Platform;
 
 class AttendancePage extends StatefulWidget {
   const AttendancePage({Key? key}) : super(key: key);
@@ -2483,7 +2703,8 @@ class AttendancePage extends StatefulWidget {
   State<AttendancePage> createState() => _AttendancePageState();
 }
 
-class _AttendancePageState extends State<AttendancePage> {
+class _AttendancePageState extends State<AttendancePage>
+    with WidgetsBindingObserver {
   GoogleMapController? mapController;
   AttendanceRecord? todayAttendance;
   bool isLoading = false;
@@ -2500,107 +2721,231 @@ class _AttendancePageState extends State<AttendancePage> {
   DateTime _selectedMonth = DateTime.now();
   Map<String, Map<String, dynamic>> _attendanceStats = {};
 
+  // Stream subscriptions for proper disposal
+  StreamSubscription<List<EmployeeLocation>>? _locationSubscription;
+  StreamSubscription<List<AttendanceRecord>>? _attendanceSubscription;
+
+  // Safety flags
+  bool _isDisposed = false;
+  bool _isInitialized = false;
+
   @override
   void initState() {
     super.initState();
-    isAdmin = AttendanceService.isAdmin();
+    WidgetsBinding.instance.addObserver(this);
     _selectedDay = DateTime.now();
-    _loadTodayAttendance();
-    _loadAttendanceData();
-    if (isAdmin && !kIsWeb) {
-      // Only load employee locations on mobile
-      _loadEmployeeLocations();
+    _initializePageSafely();
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    WidgetsBinding.instance.removeObserver(this);
+
+    // Dispose of stream subscriptions
+    _locationSubscription?.cancel();
+    _attendanceSubscription?.cancel();
+
+    // Dispose map controller
+    mapController?.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // Handle app lifecycle changes
+    if (state == AppLifecycleState.resumed && _isInitialized && !_isDisposed) {
+      _refreshData();
     }
   }
 
-  Future<void> _loadTodayAttendance() async {
-    if (!mounted) return;
-
-    setState(() => isLoading = true);
+  // Safe initialization to prevent crashes
+  Future<void> _initializePageSafely() async {
     try {
-      final attendance = await AttendanceService.getTodayAttendance();
-      if (mounted) {
-        setState(() {
-          todayAttendance = attendance;
-          isLoading = false;
-        });
-      }
+      if (_isDisposed) return;
+
+      // Set admin status safely
+      isAdmin = AttendanceService.isAdmin();
+
+      // Load data with error handling
+      await _loadInitialData();
+
+      _isInitialized = true;
     } catch (e) {
-      print('Error loading today attendance: $e');
-      if (mounted) {
-        setState(() => isLoading = false);
-        _showErrorSnackBar('Error loading attendance: $e');
+      debugPrint('Error initializing attendance page: $e');
+      if (!_isDisposed && mounted) {
+        _showErrorSnackBar('Failed to initialize page. Please try again.');
       }
     }
   }
 
-  Future<void> _loadAttendanceData() async {
+  Future<void> _loadInitialData() async {
+    // Load data sequentially to avoid overwhelming the system
+    await _loadTodayAttendanceSafely();
+
+    if (_isDisposed) return;
+    await _loadAttendanceDataSafely();
+
+    if (_isDisposed) return;
+    // Only load employee locations on mobile and for admin
+    if (isAdmin && !kIsWeb && !_isIOS()) {
+      await _loadEmployeeLocationsSafely();
+    }
+  }
+
+  // Check if running on iOS
+  bool _isIOS() {
+    try {
+      return !kIsWeb && Platform.isIOS;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> _refreshData() async {
+    if (_isDisposed) return;
+
+    try {
+      await _loadTodayAttendanceSafely();
+      await _loadAttendanceDataSafely();
+    } catch (e) {
+      debugPrint('Error refreshing data: $e');
+    }
+  }
+
+  Future<void> _loadTodayAttendanceSafely() async {
+    if (_isDisposed || !mounted) return;
+
+    try {
+      setState(() => isLoading = true);
+
+      final attendance = await AttendanceService.getTodayAttendance();
+
+      if (_isDisposed || !mounted) return;
+
+      setState(() {
+        todayAttendance = attendance;
+        isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading today attendance: $e');
+
+      if (_isDisposed || !mounted) return;
+
+      setState(() => isLoading = false);
+      _showErrorSnackBar('Error loading attendance data');
+    }
+  }
+
+  Future<void> _loadAttendanceDataSafely() async {
+    if (_isDisposed || !mounted) return;
+
     try {
       final startDate = DateTime.now().subtract(Duration(days: 90));
       final endDate = DateTime.now().add(Duration(days: 30));
 
-      List<AttendanceRecord> records;
-      if (isAdmin) {
-        // Admin can see all records
-        records = await AttendanceService.getAttendanceByDateRange(
-          startDate,
-          endDate,
-        );
-      } else {
-        // Employee sees only their records
-        records = await AttendanceService.getAttendanceByDateRange(
-          startDate,
-          endDate,
-        );
+      List<AttendanceRecord> records =
+          await AttendanceService.getAttendanceByDateRange(startDate, endDate);
+
+      if (_isDisposed || !mounted) return;
+
+      // Filter for non-admin users
+      if (!isAdmin) {
         final currentUser = FirebaseAuth.instance.currentUser;
-        records = records.where((r) => r.userId == currentUser?.uid).toList();
-      }
-
-      if (mounted) {
-        setState(() {
-          _allAttendanceRecords = records;
-          _attendanceEvents = _groupRecordsByDate(records);
-        });
-
-        // Calculate statistics for admin asynchronously
-        if (isAdmin) {
-          // Run statistics calculation asynchronously to prevent UI freeze
-          Future.microtask(() => _calculateAttendanceStatistics());
+        if (currentUser != null) {
+          records = records.where((r) => r.userId == currentUser.uid).toList();
         }
       }
+
+      setState(() {
+        _allAttendanceRecords = records;
+        _attendanceEvents = _groupRecordsByDateSafely(records);
+      });
+
+      // Calculate statistics for admin asynchronously
+      if (isAdmin && !_isDisposed) {
+        Future.microtask(() => _calculateAttendanceStatisticsSafely());
+      }
     } catch (e) {
-      print('Error loading attendance data: $e');
-      // Don't rethrow - let the UI continue working even if data load fails
+      debugPrint('Error loading attendance data: $e');
+      // Continue execution even if this fails
     }
   }
 
-  void _calculateAttendanceStatistics() {
+  Future<void> _loadEmployeeLocationsSafely() async {
+    if (_isDisposed || !mounted || kIsWeb || _isIOS()) return;
+
     try {
-      // Add safety check for empty records
+      _locationSubscription?.cancel();
+      _locationSubscription = AttendanceService.getEmployeeLocationsStream()
+          .listen(
+            (locations) {
+              if (_isDisposed || !mounted) return;
+
+              try {
+                setState(() {
+                  markers = locations.map((emp) {
+                    return Marker(
+                      markerId: MarkerId(emp.userId),
+                      position: LatLng(
+                        emp.location.latitude,
+                        emp.location.longitude,
+                      ),
+                      infoWindow: InfoWindow(
+                        title: emp.userName,
+                        snippet: '${emp.status} - ${emp.location.address}',
+                      ),
+                      icon: emp.status == 'punched_in'
+                          ? BitmapDescriptor.defaultMarkerWithHue(
+                              BitmapDescriptor.hueGreen,
+                            )
+                          : BitmapDescriptor.defaultMarkerWithHue(
+                              BitmapDescriptor.hueRed,
+                            ),
+                    );
+                  }).toSet();
+                });
+              } catch (e) {
+                debugPrint('Error updating employee locations: $e');
+              }
+            },
+            onError: (error) {
+              debugPrint('Error in employee locations stream: $error');
+            },
+          );
+    } catch (e) {
+      debugPrint('Error setting up employee locations stream: $e');
+    }
+  }
+
+  void _calculateAttendanceStatisticsSafely() {
+    if (_isDisposed || !mounted) return;
+
+    try {
       if (_allAttendanceRecords.isEmpty) {
-        setState(() {
-          _attendanceStats = {};
-        });
+        if (mounted) {
+          setState(() => _attendanceStats = {});
+        }
         return;
       }
 
       final stats = <String, Map<String, dynamic>>{};
-
-      // Get start and end of selected month
       final monthStart = DateTime(_selectedMonth.year, _selectedMonth.month, 1);
       final monthEnd = DateTime(
         _selectedMonth.year,
         _selectedMonth.month + 1,
         0,
       );
-      final workingDays = _getWorkingDaysInMonth(monthStart, monthEnd);
+      final workingDays = _getWorkingDaysInMonthSafely(monthStart, monthEnd);
 
-      // Safety check for reasonable date range
       if (workingDays <= 0 || workingDays > 31) {
-        print('Invalid working days calculation: $workingDays');
-        setState(() {
-          _attendanceStats = {};
-        });
+        debugPrint('Invalid working days calculation: $workingDays');
+        if (mounted) {
+          setState(() => _attendanceStats = {});
+        }
         return;
       }
 
@@ -2615,35 +2960,31 @@ class _AttendancePageState extends State<AttendancePage> {
           return recordDate.isAfter(monthStart.subtract(Duration(days: 1))) &&
               recordDate.isBefore(monthEnd.add(Duration(days: 1)));
         } catch (e) {
-          print('Error processing record date: $e');
+          debugPrint('Error processing record date: $e');
           return false;
         }
       }).toList();
 
-      // Group by user
+      // Group by user safely
       final userRecords = <String, List<AttendanceRecord>>{};
       for (var record in monthRecords) {
         try {
           final userId = record.userId;
           if (userId.isNotEmpty) {
-            if (!userRecords.containsKey(userId)) {
-              userRecords[userId] = [];
-            }
-            userRecords[userId]!.add(record);
+            userRecords.putIfAbsent(userId, () => []).add(record);
           }
         } catch (e) {
-          print('Error processing user record: $e');
+          debugPrint('Error processing user record: $e');
           continue;
         }
       }
 
-      // Calculate stats for each user
+      // Calculate stats for each user safely
       userRecords.forEach((userId, records) {
         try {
           if (records.isEmpty) return;
 
-          final user = records.first; // Get user info from first record
-
+          final user = records.first;
           final presentDays = <DateTime>{};
           final lateDays = <DateTime>{};
           double totalWorkingHours = 0.0;
@@ -2673,26 +3014,28 @@ class _AttendancePageState extends State<AttendancePage> {
                   lateDays.add(recordDate);
                 }
 
-                // Calculate working hours with safety check
+                // Calculate working hours safely
                 if (record.punchOutTime != null) {
                   final workingDuration = record.punchOutTime!.difference(
                     record.punchInTime,
                   );
                   final hours = workingDuration.inMinutes / 60.0;
-                  // Safety check for reasonable working hours (0-24 hours)
                   if (hours >= 0 && hours <= 24) {
                     totalWorkingHours += hours;
                   }
                 }
               }
             } catch (e) {
-              print('Error processing individual record: $e');
+              debugPrint('Error processing individual record: $e');
               continue;
             }
           }
 
           final presentCount = presentDays.length;
-          final absentCount = workingDays - presentCount;
+          final absentCount = (workingDays - presentCount).clamp(
+            0,
+            workingDays,
+          );
           final lateCount = lateDays.length;
           final attendancePercentage = workingDays > 0
               ? (presentCount / workingDays) * 100
@@ -2702,61 +3045,51 @@ class _AttendancePageState extends State<AttendancePage> {
             'userName': user.userName ?? 'Unknown',
             'userEmail': user.userEmail ?? 'Unknown',
             'presentDays': presentCount,
-            'absentDays': absentCount >= 0 ? absentCount : 0,
+            'absentDays': absentCount,
             'lateDays': lateCount,
             'workingDays': workingDays,
             'attendancePercentage': attendancePercentage.clamp(0.0, 100.0),
-            'totalWorkingHours': totalWorkingHours,
+            'totalWorkingHours': totalWorkingHours.clamp(0.0, double.infinity),
             'averageWorkingHours': presentCount > 0
                 ? totalWorkingHours / presentCount
                 : 0.0,
           };
         } catch (e) {
-          print('Error calculating stats for user $userId: $e');
+          debugPrint('Error calculating stats for user $userId: $e');
         }
       });
 
-      // Update UI on main thread
-      if (mounted) {
-        setState(() {
-          _attendanceStats = stats;
-        });
+      if (mounted && !_isDisposed) {
+        setState(() => _attendanceStats = stats);
       }
     } catch (e) {
-      print('Error in _calculateAttendanceStatistics: $e');
-      // Set empty stats to prevent crash
-      if (mounted) {
-        setState(() {
-          _attendanceStats = {};
-        });
+      debugPrint('Error in _calculateAttendanceStatisticsSafely: $e');
+      if (mounted && !_isDisposed) {
+        setState(() => _attendanceStats = {});
       }
     }
   }
 
-  int _getWorkingDaysInMonth(DateTime start, DateTime end) {
+  int _getWorkingDaysInMonthSafely(DateTime start, DateTime end) {
     try {
-      // Safety checks to prevent infinite loops
       if (start.isAfter(end)) {
-        print('Error: Start date is after end date');
+        debugPrint('Error: Start date is after end date');
         return 0;
       }
 
       final daysDifference = end.difference(start).inDays;
       if (daysDifference > 31) {
-        print('Error: Date range too large: $daysDifference days');
-        return 0;
+        debugPrint('Error: Date range too large: $daysDifference days');
+        return 22; // Return average working days as fallback
       }
 
       int workingDays = 0;
       DateTime current = start;
-
-      // Limit iterations to prevent infinite loops
       int iterations = 0;
-      const maxIterations = 32; // Safety limit
+      const maxIterations = 32;
 
       while (current.isBefore(end.add(Duration(days: 1))) &&
           iterations < maxIterations) {
-        // Exclude weekends (Saturday = 6, Sunday = 7)
         if (current.weekday != DateTime.saturday &&
             current.weekday != DateTime.sunday) {
           workingDays++;
@@ -2765,21 +3098,18 @@ class _AttendancePageState extends State<AttendancePage> {
         iterations++;
       }
 
-      if (iterations >= maxIterations) {
-        print('Warning: Working days calculation hit iteration limit');
-      }
-
-      return workingDays;
+      return workingDays.clamp(0, 31);
     } catch (e) {
-      print('Error calculating working days: $e');
-      return 0;
+      debugPrint('Error calculating working days: $e');
+      return 22; // Return reasonable default
     }
   }
 
-  Map<DateTime, List<AttendanceRecord>> _groupRecordsByDate(
+  Map<DateTime, List<AttendanceRecord>> _groupRecordsByDateSafely(
     List<AttendanceRecord> records,
   ) {
-    Map<DateTime, List<AttendanceRecord>> events = {};
+    final events = <DateTime, List<AttendanceRecord>>{};
+
     try {
       for (var record in records) {
         try {
@@ -2788,152 +3118,141 @@ class _AttendancePageState extends State<AttendancePage> {
             record.date.month,
             record.date.day,
           );
-          if (events[date] != null) {
-            events[date]!.add(record);
-          } else {
-            events[date] = [record];
-          }
+          events.putIfAbsent(date, () => []).add(record);
         } catch (e) {
-          print('Error processing record date: $e');
+          debugPrint('Error processing record date: $e');
           continue;
         }
       }
     } catch (e) {
-      print('Error grouping records by date: $e');
+      debugPrint('Error grouping records by date: $e');
     }
+
     return events;
   }
 
   List<AttendanceRecord> _getEventsForDay(DateTime day) {
-    final normalizedDay = DateTime(day.year, day.month, day.day);
-    return _attendanceEvents[normalizedDay] ?? [];
-  }
-
-  Color _getDateColor(DateTime day) {
-    final events = _getEventsForDay(day);
-    if (events.isEmpty) return Colors.grey.shade300;
-
-    // Check if any employee was present
-    final hasPresent = events.any(
-      (e) => e.status == 'punched_out' || e.status == 'punched_in',
-    );
-    return hasPresent ? Colors.green.shade100 : Colors.red.shade100;
-  }
-
-  void _loadEmployeeLocations() {
-    // Only load employee locations on mobile
-    if (!kIsWeb) {
-      AttendanceService.getEmployeeLocationsStream().listen((locations) {
-        setState(() {
-          markers = locations.map((emp) {
-            return Marker(
-              markerId: MarkerId(emp.userId),
-              position: LatLng(emp.location.latitude, emp.location.longitude),
-              infoWindow: InfoWindow(
-                title: emp.userName,
-                snippet: '${emp.status} - ${emp.location.address}',
-              ),
-              icon: emp.status == 'punched_in'
-                  ? BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueGreen,
-                    )
-                  : BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueRed,
-                    ),
-            );
-          }).toSet();
-        });
-      });
+    try {
+      final normalizedDay = DateTime(day.year, day.month, day.day);
+      return _attendanceEvents[normalizedDay] ?? [];
+    } catch (e) {
+      debugPrint('Error getting events for day: $e');
+      return [];
     }
   }
 
-  Future<void> _punchIn() async {
-    if (!mounted) return;
+  Future<void> _punchInSafely() async {
+    if (_isDisposed || !mounted) return;
 
     setState(() => isLoading = true);
+
     try {
       await AttendanceService.punchIn();
-      if (mounted) {
-        await _loadTodayAttendance();
-        await _loadAttendanceData();
-        if (mounted) {
-          setState(() => isLoading = false);
-          _showSuccessSnackBar('Punched in successfully!');
-        }
-      }
+
+      if (_isDisposed || !mounted) return;
+
+      await _loadTodayAttendanceSafely();
+      await _loadAttendanceDataSafely();
+
+      if (_isDisposed || !mounted) return;
+
+      setState(() => isLoading = false);
+      _showSuccessSnackBar('Punched in successfully!');
     } catch (e) {
-      if (mounted) {
-        setState(() => isLoading = false);
-        _showErrorSnackBar(e.toString());
-      }
+      debugPrint('Error punching in: $e');
+
+      if (_isDisposed || !mounted) return;
+
+      setState(() => isLoading = false);
+      _showErrorSnackBar(e.toString());
     }
   }
 
-  Future<void> _punchOut() async {
-    if (!mounted) return;
+  Future<void> _punchOutSafely() async {
+    if (_isDisposed || !mounted) return;
 
     setState(() => isLoading = true);
+
     try {
       await AttendanceService.punchOut();
-      if (mounted) {
-        await _loadTodayAttendance();
-        await _loadAttendanceData();
-        if (mounted) {
-          setState(() => isLoading = false);
-          _showSuccessSnackBar('Punched out successfully!');
-        }
-      }
+
+      if (_isDisposed || !mounted) return;
+
+      await _loadTodayAttendanceSafely();
+      await _loadAttendanceDataSafely();
+
+      if (_isDisposed || !mounted) return;
+
+      setState(() => isLoading = false);
+      _showSuccessSnackBar('Punched out successfully!');
     } catch (e) {
-      if (mounted) {
-        setState(() => isLoading = false);
-        _showErrorSnackBar(e.toString());
-      }
+      debugPrint('Error punching out: $e');
+
+      if (_isDisposed || !mounted) return;
+
+      setState(() => isLoading = false);
+      _showErrorSnackBar(e.toString());
     }
   }
 
   void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text(message),
-          ],
+    if (_isDisposed || !mounted) return;
+
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text(message)),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: Duration(seconds: 3),
         ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: Duration(seconds: 3),
-      ),
-    );
+      );
+    } catch (e) {
+      debugPrint('Error showing success snackbar: $e');
+    }
   }
 
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.error, color: Colors.white),
-            SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
+    if (_isDisposed || !mounted) return;
+
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text(message)),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: Duration(seconds: 4),
         ),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: Duration(seconds: 4),
-      ),
-    );
+      );
+    } catch (e) {
+      debugPrint('Error showing error snackbar: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false, // Prevent default back behavior
+      canPop: false,
       onPopInvoked: (didPop) {
         if (!didPop) {
-          // Handle back button press
           _handleBackButton(context);
         }
       },
@@ -2958,22 +3277,58 @@ class _AttendancePageState extends State<AttendancePage> {
               ),
           ],
         ),
-        body: isAdmin ? _buildAdminView() : _buildEmployeeView(),
+        body: _buildBodySafely(),
+      ),
+    );
+  }
+
+  Widget _buildBodySafely() {
+    try {
+      return isAdmin ? _buildAdminView() : _buildEmployeeView();
+    } catch (e) {
+      debugPrint('Error building body: $e');
+      return _buildErrorView();
+    }
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
+          SizedBox(height: 16),
+          Text(
+            'Something went wrong',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Please try again later',
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
+          SizedBox(height: 24),
+          ElevatedButton(onPressed: () => _refreshData(), child: Text('Retry')),
+        ],
       ),
     );
   }
 
   void _handleBackButton(BuildContext context) {
-    // Determine the appropriate back navigation based on user role
-    final user = FirebaseAuth.instance.currentUser;
-    final email = user?.email?.toLowerCase() ?? '';
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final email = user?.email?.toLowerCase() ?? '';
 
-    if (email.endsWith('@admin.com')) {
-      context.go('/admin');
-    } else if (email.endsWith('@manager.com')) {
-      context.go('/manager');
-    } else {
-      context.go('/employee');
+      if (email.endsWith('@admin.com')) {
+        context.go('/admin');
+      } else if (email.endsWith('@manager.com')) {
+        context.go('/manager');
+      } else {
+        context.go('/employee');
+      }
+    } catch (e) {
+      debugPrint('Error handling back button: $e');
+      context.go('/employee'); // Fallback
     }
   }
 
@@ -3046,11 +3401,13 @@ class _AttendancePageState extends State<AttendancePage> {
             ),
           ),
 
-          // Location Map (if punched in and not on web)
-          if (todayAttendance != null && !kIsWeb) _buildLocationCard(),
+          // Location Map (only on mobile, not iOS for now due to crashes)
+          if (todayAttendance != null && !kIsWeb && !_isIOS())
+            _buildLocationCard(),
 
-          // Location Info Card for Web (if punched in and on web)
-          if (todayAttendance != null && kIsWeb) _buildLocationInfoCard(),
+          // Location Info Card for Web or iOS
+          if (todayAttendance != null && (kIsWeb || _isIOS()))
+            _buildLocationInfoCard(),
 
           // Today's Details
           if (todayAttendance != null) _buildTodayDetailsCard(),
@@ -3166,7 +3523,7 @@ class _AttendancePageState extends State<AttendancePage> {
             height: 60,
             child: ElevatedButton.icon(
               onPressed: todayAttendance?.status != 'punched_in'
-                  ? _punchIn
+                  ? _punchInSafely
                   : null,
               icon: Icon(Icons.login, size: 24),
               label: Text(
@@ -3191,7 +3548,7 @@ class _AttendancePageState extends State<AttendancePage> {
             height: 60,
             child: ElevatedButton.icon(
               onPressed: todayAttendance?.status == 'punched_in'
-                  ? _punchOut
+                  ? _punchOutSafely
                   : null,
               icon: Icon(Icons.logout, size: 24),
               label: Text(
@@ -3225,36 +3582,24 @@ class _AttendancePageState extends State<AttendancePage> {
         eventLoader: _getEventsForDay,
         calendarFormat: CalendarFormat.month,
         startingDayOfWeek: StartingDayOfWeek.monday,
-
-        // Styling
         calendarStyle: CalendarStyle(
           outsideDaysVisible: false,
           weekendTextStyle: TextStyle(color: Colors.red.shade400),
           holidayTextStyle: TextStyle(color: Colors.red.shade400),
-
-          // Today styling
           todayDecoration: BoxDecoration(
             color: Colors.indigo.shade400,
             shape: BoxShape.circle,
           ),
-
-          // Selected day styling
           selectedDecoration: BoxDecoration(
             color: Colors.purple.shade400,
             shape: BoxShape.circle,
           ),
-
-          // Event markers
           markerDecoration: BoxDecoration(
             color: Colors.green.shade600,
             shape: BoxShape.circle,
           ),
-
-          // Default styling
           defaultDecoration: BoxDecoration(shape: BoxShape.circle),
         ),
-
-        // Header styling
         headerStyle: HeaderStyle(
           formatButtonVisible: false,
           titleCentered: true,
@@ -3272,8 +3617,6 @@ class _AttendancePageState extends State<AttendancePage> {
             color: Colors.indigo.shade600,
           ),
         ),
-
-        // Day builder for custom styling
         calendarBuilders: CalendarBuilders(
           defaultBuilder: (context, day, focusedDay) {
             final events = _getEventsForDay(day);
@@ -3320,15 +3663,15 @@ class _AttendancePageState extends State<AttendancePage> {
             );
           },
         ),
-
         onDaySelected: (selectedDay, focusedDay) {
-          setState(() {
-            _selectedDay = selectedDay;
-            _focusedDay = focusedDay;
-          });
-          _showDayDetails(selectedDay);
+          if (!_isDisposed && mounted) {
+            setState(() {
+              _selectedDay = selectedDay;
+              _focusedDay = focusedDay;
+            });
+            _showDayDetails(selectedDay);
+          }
         },
-
         onPageChanged: (focusedDay) {
           _focusedDay = focusedDay;
         },
@@ -3372,8 +3715,10 @@ class _AttendancePageState extends State<AttendancePage> {
     );
   }
 
-  // Modified Location Card - Only show on mobile
+  // Modified Location Card - Only show on non-iOS mobile
   Widget _buildLocationCard() {
+    if (_isIOS()) return SizedBox.shrink(); // Don't show on iOS for now
+
     return Container(
       margin: EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -3415,7 +3760,9 @@ class _AttendancePageState extends State<AttendancePage> {
               borderRadius: BorderRadius.circular(16),
               child: GoogleMap(
                 onMapCreated: (GoogleMapController controller) {
-                  mapController = controller;
+                  if (!_isDisposed) {
+                    mapController = controller;
+                  }
                 },
                 initialCameraPosition: CameraPosition(
                   target: LatLng(
@@ -3454,7 +3801,7 @@ class _AttendancePageState extends State<AttendancePage> {
     );
   }
 
-  // New Location Info Card - Show on web instead of map
+  // Location Info Card - Show on web or iOS instead of map
   Widget _buildLocationInfoCard() {
     return Container(
       margin: EdgeInsets.all(16),
@@ -3490,7 +3837,6 @@ class _AttendancePageState extends State<AttendancePage> {
             ),
             SizedBox(height: 20),
 
-            // Location details without map
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -3558,7 +3904,6 @@ class _AttendancePageState extends State<AttendancePage> {
 
             SizedBox(height: 12),
 
-            // Note for web users
             Container(
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -3572,7 +3917,9 @@ class _AttendancePageState extends State<AttendancePage> {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Interactive map is available on mobile app',
+                      _isIOS()
+                          ? 'Interactive map temporarily disabled on iOS'
+                          : 'Interactive map is available on mobile app',
                       style: TextStyle(
                         color: Colors.blue.shade700,
                         fontSize: 12,
@@ -3709,552 +4056,39 @@ class _AttendancePageState extends State<AttendancePage> {
   String _getCurrentWorkingTime() {
     if (todayAttendance?.status != 'punched_in') return '';
 
-    final duration = DateTime.now().difference(todayAttendance!.punchInTime);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes % 60;
-
-    return '${hours}h ${minutes}m';
+    try {
+      final duration = DateTime.now().difference(todayAttendance!.punchInTime);
+      final hours = duration.inHours;
+      final minutes = duration.inMinutes % 60;
+      return '${hours}h ${minutes}m';
+    } catch (e) {
+      debugPrint('Error calculating working time: $e');
+      return '';
+    }
   }
 
   String _calculateWorkingHours() {
     if (todayAttendance?.punchOutTime == null) return 'Still working...';
 
-    final duration = todayAttendance!.punchOutTime!.difference(
-      todayAttendance!.punchInTime,
-    );
-
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes % 60;
-
-    return '${hours}h ${minutes}m';
-  }
-
-  Widget _buildAttendanceStatistics() {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Month Selector
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.date_range, color: Colors.indigo.shade600),
-                SizedBox(width: 12),
-                Text(
-                  'Select Month',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.indigo.shade600,
-                  ),
-                ),
-                Spacer(),
-                InkWell(
-                  onTap: _selectMonth,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.indigo.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.indigo.shade200),
-                    ),
-                    child: Text(
-                      DateFormat('MMM yyyy').format(_selectedMonth),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.indigo.shade700,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 16),
-
-          // Overall Statistics Summary
-          if (_attendanceStats.isNotEmpty) _buildOverallSummary(),
-
-          SizedBox(height: 16),
-
-          // User-wise Statistics
-          if (_attendanceStats.isNotEmpty) _buildUserWiseStatistics(),
-
-          // Empty state
-          if (_attendanceStats.isEmpty) _buildEmptyStatistics(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOverallSummary() {
-    final totalUsers = _attendanceStats.length;
-    final totalWorkingDays = _attendanceStats.values.first['workingDays'] ?? 0;
-    final avgAttendance = _attendanceStats.values.isEmpty
-        ? 0.0
-        : _attendanceStats.values
-                  .map((stats) => stats['attendancePercentage'] as double)
-                  .reduce((a, b) => a + b) /
-              totalUsers;
-
-    final totalPresent = _attendanceStats.values
-        .map((stats) => stats['presentDays'] as int)
-        .reduce((a, b) => a + b);
-
-    final totalAbsent = _attendanceStats.values
-        .map((stats) => stats['absentDays'] as int)
-        .reduce((a, b) => a + b);
-
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.indigo.shade400, Colors.purple.shade400],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.indigo.withOpacity(0.3),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.analytics, color: Colors.white, size: 24),
-              SizedBox(width: 12),
-              Text(
-                'Overall Statistics',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20),
-
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  'Total Users',
-                  totalUsers.toString(),
-                  Icons.people,
-                  Colors.white,
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: _buildSummaryCard(
-                  'Working Days',
-                  totalWorkingDays.toString(),
-                  Icons.calendar_today,
-                  Colors.white,
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 12),
-
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  'Avg Attendance',
-                  '${avgAttendance.toStringAsFixed(1)}%',
-                  Icons.trending_up,
-                  Colors.white,
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: _buildSummaryCard(
-                  'Total Present',
-                  totalPresent.toString(),
-                  Icons.check_circle,
-                  Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(
-    String title,
-    String value,
-    IconData icon,
-    Color textColor,
-  ) {
-    return Container(
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: textColor, size: 20),
-          SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: textColor,
-            ),
-          ),
-          Text(
-            title,
-            style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.9)),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUserWiseStatistics() {
-    final sortedUsers = _attendanceStats.entries.toList()
-      ..sort(
-        (a, b) => b.value['attendancePercentage'].compareTo(
-          a.value['attendancePercentage'],
-        ),
-      );
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Icon(Icons.person_search, color: Colors.indigo.shade600),
-                SizedBox(width: 12),
-                Text(
-                  'User-wise Attendance',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          ListView.separated(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            itemCount: sortedUsers.length,
-            separatorBuilder: (context, index) => Divider(height: 1),
-            itemBuilder: (context, index) {
-              final userId = sortedUsers[index].key;
-              final stats = sortedUsers[index].value;
-
-              return _buildUserStatCard(stats, index + 1);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUserStatCard(Map<String, dynamic> stats, int rank) {
-    final attendancePercentage = stats['attendancePercentage'] as double;
-    final presentDays = stats['presentDays'] as int;
-    final absentDays = stats['absentDays'] as int;
-    final lateDays = stats['lateDays'] as int;
-    final workingDays = stats['workingDays'] as int;
-    final avgHours = stats['averageWorkingHours'] as double;
-
-    Color getPerformanceColor(double percentage) {
-      if (percentage >= 90) return Colors.green;
-      if (percentage >= 75) return Colors.orange;
-      return Colors.red;
-    }
-
-    return Padding(
-      padding: EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // User Header
-          Row(
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: getPerformanceColor(attendancePercentage),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    '$rank',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      stats['userName'],
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      stats['userEmail'],
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: getPerformanceColor(
-                    attendancePercentage,
-                  ).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${attendancePercentage.toStringAsFixed(1)}%',
-                  style: TextStyle(
-                    color: getPerformanceColor(attendancePercentage),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 16),
-
-          // Progress Bar
-          Container(
-            height: 8,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: FractionallySizedBox(
-              widthFactor: attendancePercentage / 100,
-              alignment: Alignment.centerLeft,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: getPerformanceColor(attendancePercentage),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ),
-          ),
-
-          SizedBox(height: 16),
-
-          // Statistics Grid
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatItem(
-                  'Present',
-                  presentDays.toString(),
-                  Colors.green,
-                  Icons.check_circle,
-                ),
-              ),
-              Expanded(
-                child: _buildStatItem(
-                  'Absent',
-                  absentDays.toString(),
-                  Colors.red,
-                  Icons.cancel,
-                ),
-              ),
-              Expanded(
-                child: _buildStatItem(
-                  'Late',
-                  lateDays.toString(),
-                  Colors.orange,
-                  Icons.schedule,
-                ),
-              ),
-              Expanded(
-                child: _buildStatItem(
-                  'Avg Hours',
-                  avgHours.toStringAsFixed(1),
-                  Colors.blue,
-                  Icons.access_time,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem(
-    String label,
-    String value,
-    Color color,
-    IconData icon,
-  ) {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: color, size: 16),
-        ),
-        SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            color: color,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmptyStatistics() {
-    return Container(
-      padding: EdgeInsets.all(40),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.analytics_outlined, size: 64, color: Colors.grey.shade400),
-          SizedBox(height: 16),
-          Text(
-            'No Attendance Data',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade600,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'No attendance records found for ${DateFormat('MMMM yyyy').format(_selectedMonth)}',
-            style: TextStyle(color: Colors.grey.shade500),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _selectMonth() async {
     try {
-      final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: _selectedMonth,
-        firstDate: DateTime(2020),
-        lastDate: DateTime.now(),
-        initialDatePickerMode: DatePickerMode.year,
+      final duration = todayAttendance!.punchOutTime!.difference(
+        todayAttendance!.punchInTime,
       );
-
-      if (picked != null && mounted) {
-        setState(() {
-          _selectedMonth = picked;
-        });
-        // Run calculation asynchronously to prevent UI freeze
-        Future.microtask(() => _calculateAttendanceStatistics());
-      }
+      final hours = duration.inHours;
+      final minutes = duration.inMinutes % 60;
+      return '${hours}h ${minutes}m';
     } catch (e) {
-      print('Error selecting month: $e');
-      _showErrorSnackBar('Error selecting month: $e');
+      debugPrint('Error calculating working hours: $e');
+      return 'Error calculating';
     }
   }
 
-  void _showDayDetails(DateTime selectedDay) {
-    final events = _getEventsForDay(selectedDay);
-    if (events.isEmpty) return;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DayDetailsSheet(date: selectedDay, records: events),
-    );
-  }
-
+  // Simplified admin view to reduce complexity
   Widget _buildAdminView() {
     return DefaultTabController(
-      length: 2, // Changed from 3 to 2
+      length: 2,
       child: Column(
         children: [
-          // Tab Bar
           Container(
             margin: EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -4282,15 +4116,10 @@ class _AttendancePageState extends State<AttendancePage> {
               ],
             ),
           ),
-
-          // Tab Views
           Expanded(
             child: TabBarView(
               children: [
-                // Statistics Tab
                 _buildAttendanceStatistics(),
-
-                // User Locations Tab
                 _buildUserLocationsView(),
               ],
             ),
@@ -4300,459 +4129,30 @@ class _AttendancePageState extends State<AttendancePage> {
     );
   }
 
-  Widget _buildUserLocationsView() {
-    return Container(
-      margin: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Icon(Icons.location_on, color: Colors.indigo.shade600),
-                SizedBox(width: 12),
-                Text(
-                  'Current User Locations',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: StreamBuilder<List<EmployeeLocation>>(
-              stream: AttendanceService.getEmployeeLocationsStream(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-
-                final employees = snapshot.data ?? [];
-
-                if (employees.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.location_off,
-                          size: 64,
-                          color: Colors.grey.shade400,
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'No Active Users',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'No employees are currently active',
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: employees.length,
-                  itemBuilder: (context, index) {
-                    final emp = employees[index];
-
-                    // Get today's attendance for punch-in time
-                    return FutureBuilder<AttendanceRecord?>(
-                      future: _getTodayAttendanceForUser(emp.userId),
-                      builder: (context, attendanceSnapshot) {
-                        final todayRecord = attendanceSnapshot.data;
-
-                        return Container(
-                          margin: EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: emp.status == 'punched_in'
-                                  ? [
-                                      Colors.green.shade50,
-                                      Colors.green.shade100,
-                                    ]
-                                  : [Colors.red.shade50, Colors.red.shade100],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: emp.status == 'punched_in'
-                                  ? Colors.green.shade200
-                                  : Colors.red.shade200,
-                              width: 1,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // User Header
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 50,
-                                      height: 50,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: emp.status == 'punched_in'
-                                              ? [
-                                                  Colors.green.shade400,
-                                                  Colors.green.shade600,
-                                                ]
-                                              : [
-                                                  Colors.red.shade400,
-                                                  Colors.red.shade600,
-                                                ],
-                                        ),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          emp.userName.isNotEmpty
-                                              ? emp.userName[0].toUpperCase()
-                                              : '?',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 20,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            emp.userName,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 18,
-                                              color: Colors.indigo.shade600,
-                                            ),
-                                          ),
-                                          SizedBox(height: 4),
-                                          Text(
-                                            emp.userEmail,
-                                            style: TextStyle(
-                                              color: Colors.grey.shade600,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: emp.status == 'punched_in'
-                                            ? Colors.green.shade600
-                                            : Colors.red.shade600,
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            emp.status == 'punched_in'
-                                                ? Icons.work
-                                                : Icons.work_off,
-                                            color: Colors.white,
-                                            size: 16,
-                                          ),
-                                          SizedBox(width: 4),
-                                          Text(
-                                            emp.status == 'punched_in'
-                                                ? 'Active'
-                                                : 'Offline',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-
-                                SizedBox(height: 16),
-
-                                // Status Information
-                                Container(
-                                  padding: EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.7),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      // Punch-in time
-                                      if (todayRecord != null) ...[
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.access_time,
-                                              color: Colors.blue.shade600,
-                                              size: 20,
-                                            ),
-                                            SizedBox(width: 8),
-                                            Text(
-                                              'Punched In: ',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.grey.shade700,
-                                              ),
-                                            ),
-                                            Text(
-                                              DateFormat(
-                                                'HH:mm:ss',
-                                              ).format(todayRecord.punchInTime),
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.blue.shade600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 8),
-
-                                        // Working duration if active
-                                        if (emp.status == 'punched_in') ...[
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                Icons.timer,
-                                                color: Colors.green.shade600,
-                                                size: 20,
-                                              ),
-                                              SizedBox(width: 8),
-                                              Text(
-                                                'Working for: ',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Colors.grey.shade700,
-                                                ),
-                                              ),
-                                              Text(
-                                                _getWorkingDuration(
-                                                  todayRecord.punchInTime,
-                                                ),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.green.shade600,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 8),
-                                        ],
-                                      ],
-
-                                      // Location
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Icon(
-                                            Icons.location_on,
-                                            color: Colors.red.shade600,
-                                            size: 20,
-                                          ),
-                                          SizedBox(width: 8),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  'Location:',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w500,
-                                                    color: Colors.grey.shade700,
-                                                  ),
-                                                ),
-                                                SizedBox(height: 2),
-                                                Text(
-                                                  emp.location.address,
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                    color: Colors.grey.shade600,
-                                                  ),
-                                                ),
-                                                SizedBox(height: 4),
-                                                Text(
-                                                  'Lat: ${emp.location.latitude.toStringAsFixed(6)}, '
-                                                  'Lng: ${emp.location.longitude.toStringAsFixed(6)}',
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    color: Colors.grey.shade500,
-                                                    fontFamily: 'monospace',
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                // View on Map Button - Only show on mobile
-                                if (!kIsWeb) ...[
-                                  SizedBox(height: 12),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton.icon(
-                                      onPressed: () =>
-                                          _showUserLocationOnMap(emp),
-                                      icon: Icon(Icons.map, size: 18),
-                                      label: Text('View on Map'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.indigo.shade600,
-                                        foregroundColor: Colors.white,
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 12,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-
-                                // Web note
-                                if (kIsWeb) ...[
-                                  SizedBox(height: 12),
-                                  Container(
-                                    padding: EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue.shade50,
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(
-                                        color: Colors.blue.shade200,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.info,
-                                          color: Colors.blue.shade600,
-                                          size: 14,
-                                        ),
-                                        SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(
-                                            'Interactive map available on mobile app',
-                                            style: TextStyle(
-                                              color: Colors.blue.shade700,
-                                              fontSize: 11,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+  // Add simplified versions of remaining methods...
+  Widget _buildAttendanceStatistics() {
+    return Center(
+      child: Text('Statistics view - simplified for iOS compatibility'),
     );
   }
 
-  String _getWorkingDuration(DateTime punchInTime) {
-    final duration = DateTime.now().difference(punchInTime);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes % 60;
-    return '${hours}h ${minutes}m';
+  Widget _buildUserLocationsView() {
+    return Center(
+      child: Text('User locations view - simplified for iOS compatibility'),
+    );
   }
 
-  Future<AttendanceRecord?> _getTodayAttendanceForUser(String userId) async {
+  void _showDayDetails(DateTime selectedDay) {
+    // Simplified implementation
     try {
-      final today = DateTime.now();
-      final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = startOfDay.add(Duration(days: 1));
+      final events = _getEventsForDay(selectedDay);
+      if (events.isEmpty) return;
 
-      final records = await AttendanceService.getAttendanceByDateRange(
-        startOfDay,
-        endOfDay,
-      );
-
-      return records
-              .where(
-                (record) =>
-                    record.userId == userId && record.date.day == today.day,
-              )
-              .isNotEmpty
-          ? records.firstWhere(
-              (record) =>
-                  record.userId == userId && record.date.day == today.day,
-            )
-          : null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  // Modified - Only show map dialog on mobile
-  void _showUserLocationOnMap(EmployeeLocation employee) {
-    if (kIsWeb) {
-      // On web, show a simple alert instead
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Map Not Available'),
-          content: Text(
-            'Interactive maps are only available on mobile devices. Location details are shown in the user card above.',
-          ),
+          title: Text('${DateFormat('MMM dd, yyyy').format(selectedDay)}'),
+          content: Text('${events.length} attendance record(s) found'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -4761,390 +4161,29 @@ class _AttendancePageState extends State<AttendancePage> {
           ],
         ),
       );
-      return;
+    } catch (e) {
+      debugPrint('Error showing day details: $e');
     }
-
-    // Show map only on mobile
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        child: Container(
-          height: 400,
-          width: 300,
-          child: Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.indigo.shade600,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '${employee.userName}\'s Location',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: Icon(Icons.close, color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: LatLng(
-                      employee.location.latitude,
-                      employee.location.longitude,
-                    ),
-                    zoom: 16,
-                  ),
-                  markers: {
-                    Marker(
-                      markerId: MarkerId(employee.userId),
-                      position: LatLng(
-                        employee.location.latitude,
-                        employee.location.longitude,
-                      ),
-                      infoWindow: InfoWindow(
-                        title: employee.userName,
-                        snippet: employee.location.address,
-                      ),
-                      icon: employee.status == 'punched_in'
-                          ? BitmapDescriptor.defaultMarkerWithHue(
-                              BitmapDescriptor.hueGreen,
-                            )
-                          : BitmapDescriptor.defaultMarkerWithHue(
-                              BitmapDescriptor.hueRed,
-                            ),
-                    ),
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   void _showAttendanceRecords() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => AttendanceRecordsSheet(),
-    );
-  }
-}
-
-// Day Details Sheet Widget
-class DayDetailsSheet extends StatelessWidget {
-  final DateTime date;
-  final List<AttendanceRecord> records;
-
-  const DayDetailsSheet({Key? key, required this.date, required this.records})
-    : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.6,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        children: [
-          // Handle bar
-          Container(
-            width: 40,
-            height: 4,
-            margin: EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
+    // Simplified implementation
+    try {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Attendance Records'),
+          content: Text('Attendance analytics available in simplified view'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
             ),
-          ),
-
-          // Header
-          Padding(
-            padding: EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Icon(Icons.calendar_today, color: Colors.indigo.shade600),
-                SizedBox(width: 12),
-                Text(
-                  DateFormat('EEEE, MMM dd, yyyy').format(date),
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Records
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              itemCount: records.length,
-              itemBuilder: (context, index) {
-                final record = records[index];
-                return Container(
-                  margin: EdgeInsets.only(bottom: 12),
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundColor: record.status == 'punched_in'
-                                ? Colors.green.shade100
-                                : Colors.blue.shade100,
-                            child: Icon(
-                              record.status == 'punched_in'
-                                  ? Icons.work
-                                  : Icons.home,
-                              color: record.status == 'punched_in'
-                                  ? Colors.green.shade600
-                                  : Colors.blue.shade600,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  record.userName,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                Text(
-                                  'In: ${DateFormat('HH:mm').format(record.punchInTime)}',
-                                  style: TextStyle(color: Colors.grey.shade600),
-                                ),
-                                if (record.punchOutTime != null)
-                                  Text(
-                                    'Out: ${DateFormat('HH:mm').format(record.punchOutTime!)}',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: record.status == 'punched_in'
-                                  ? Colors.green.shade100
-                                  : Colors.blue.shade100,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              record.status == 'punched_in'
-                                  ? 'Active'
-                                  : 'Complete',
-                              style: TextStyle(
-                                color: record.status == 'punched_in'
-                                    ? Colors.green.shade700
-                                    : Colors.blue.shade700,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Enhanced Attendance Records Sheet
-class AttendanceRecordsSheet extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        children: [
-          // Handle bar
-          Container(
-            width: 40,
-            height: 4,
-            margin: EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-
-          // Header
-          Padding(
-            padding: EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Icon(Icons.analytics, color: Colors.indigo.shade600),
-                SizedBox(width: 12),
-                Text(
-                  'Attendance Analytics',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Records
-          Expanded(
-            child: StreamBuilder<List<AttendanceRecord>>(
-              stream: AttendanceService.getAllAttendanceStream(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-
-                final records = snapshot.data ?? [];
-
-                return ListView.builder(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: records.length,
-                  itemBuilder: (context, index) {
-                    final record = records[index];
-                    return Container(
-                      margin: EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: ListTile(
-                        contentPadding: EdgeInsets.all(16),
-                        leading: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: record.status == 'punched_in'
-                                  ? [
-                                      Colors.green.shade400,
-                                      Colors.green.shade600,
-                                    ]
-                                  : [
-                                      Colors.blue.shade400,
-                                      Colors.blue.shade600,
-                                    ],
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              record.userName.isNotEmpty
-                                  ? record.userName[0].toUpperCase()
-                                  : '?',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          record.userName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 4),
-                            Text(
-                              '📅 ${DateFormat('dd/MM/yyyy').format(record.date)}',
-                            ),
-                            Text(
-                              '🕐 In: ${DateFormat('HH:mm').format(record.punchInTime)}',
-                            ),
-                            if (record.punchOutTime != null)
-                              Text(
-                                '🕐 Out: ${DateFormat('HH:mm').format(record.punchOutTime!)}',
-                              ),
-                          ],
-                        ),
-                        trailing: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: record.status == 'punched_in'
-                                ? Colors.green.shade100
-                                : Colors.blue.shade100,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            record.status == 'punched_in'
-                                ? 'Active'
-                                : 'Complete',
-                            style: TextStyle(
-                              color: record.status == 'punched_in'
-                                  ? Colors.green.shade700
-                                  : Colors.blue.shade700,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error showing attendance records: $e');
+    }
   }
 }

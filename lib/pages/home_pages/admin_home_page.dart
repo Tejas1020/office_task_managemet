@@ -1,472 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter/foundation.dart';
-// import 'package:go_router/go_router.dart';
-// import 'package:office_task_managemet/widgets/app_drawer.dart';
-// import 'package:office_task_managemet/widgets/header_module.dart';
-// import 'package:office_task_managemet/utils/colors.dart';
-// import 'package:office_task_managemet/utils/theme.dart';
-// import 'package:office_task_managemet/widgets/project_card.dart';
-// import 'package:office_task_managemet/widgets/simple_nav_bar.dart';
-
-// class AdminHomePage extends StatefulWidget {
-//   const AdminHomePage({Key? key}) : super(key: key);
-
-//   @override
-//   State<AdminHomePage> createState() => _AdminHomePageState();
-// }
-
-// class _AdminHomePageState extends State<AdminHomePage> {
-//   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-//   bool get isWeb => kIsWeb;
-//   bool get isMobile => !kIsWeb;
-
-//   bool _isScreenWide(BuildContext context) {
-//     return MediaQuery.of(context).size.width > 800;
-//   }
-
-//   List<CompactProjectCard> get _projectCards => [
-//     CompactProjectCard(
-//       title: 'Tasks',
-//       count: 10,
-//       icon: Icons.assignment_outlined,
-//       backgroundColor: const Color(0xFF2E3440),
-//       foregroundColor: Colors.white,
-//       route: '/admin_view_task',
-//     ),
-//     CompactProjectCard(
-//       title: 'Todos',
-//       count: 26,
-//       icon: Icons.checklist_outlined,
-//       backgroundColor: const Color(0xFF434C5E),
-//       foregroundColor: Colors.white,
-//       route: '/view_todo_list',
-//     ),
-//     // CompactProjectCard(
-//     //   title: 'Create Links',
-//     //   count: 10,
-//     //   icon: Icons.add_link_outlined,
-//     //   backgroundColor: const Color(0xFF5E81AC),
-//     //   foregroundColor: Colors.white,
-//     //   route: '/create_works_link_page',
-//     // ),
-//     CompactProjectCard(
-//       title: 'View Links',
-//       count: 10,
-//       icon: Icons.link_outlined,
-//       backgroundColor: const Color(0xFF81A1C1),
-//       foregroundColor: Colors.white,
-//       route: '/view_works_link_page',
-//     ),
-//     // CompactProjectCard(
-//     //   title: 'Create Target',
-//     //   count: 20,
-//     //   icon: Icons.flag_outlined,
-//     //   backgroundColor: const Color(0xFF5F7A61),
-//     //   foregroundColor: Colors.white,
-//     //   route: '/create_target',
-//     // ),
-//     CompactProjectCard(
-//       title: 'View Targets',
-//       count: 20,
-//       icon: Icons.analytics_outlined,
-//       backgroundColor: const Color(0xFF6B8E6B),
-//       foregroundColor: Colors.white,
-//       route: '/view_target',
-//     ),
-//     // CompactProjectCard(
-//     //   title: 'Create Team',
-//     //   count: 20,
-//     //   icon: Icons.person_add_sharp,
-//     //   backgroundColor: const Color.fromARGB(255, 122, 121, 95),
-//     //   foregroundColor: Colors.white,
-//     //   route: '/create_team',
-//     // ),
-//     CompactProjectCard(
-//       title: 'View Teams',
-//       count: 20,
-//       icon: Icons.people_rounded,
-//       backgroundColor: const Color.fromARGB(255, 142, 141, 107),
-//       foregroundColor: Colors.white,
-//       route: '/view_team_page',
-//     ),
-//     // CompactProjectCard(
-//     //   title: 'Create Daily Task',
-//     //   count: 20,
-//     //   icon: Icons.task_outlined,
-//     //   backgroundColor: const Color.fromARGB(255, 122, 95, 95),
-//     //   foregroundColor: Colors.white,
-//     //   route: '/create_daily_task',
-//     // ),
-//     CompactProjectCard(
-//       title: 'View Daily Task',
-//       count: 20,
-//       icon: Icons.task_sharp,
-//       backgroundColor: const Color.fromARGB(255, 142, 107, 107),
-//       foregroundColor: Colors.white,
-//       route: '/view_daily_task',
-//     ),
-//     // CompactProjectCard(
-//     //   title: 'Create Accounts',
-//     //   count: 20,
-//     //   icon: Icons.account_balance,
-//     //   backgroundColor: const Color.fromARGB(255, 95, 121, 122),
-//     //   foregroundColor: Colors.white,
-//     //   route: '/create_accounts',
-//     // ),
-//     CompactProjectCard(
-//       title: 'View Accounts',
-//       count: 20,
-//       icon: Icons.account_balance_sharp,
-//       backgroundColor: const Color.fromARGB(255, 107, 142, 142),
-//       foregroundColor: Colors.white,
-//       route: '/view_accounts',
-//     ),
-//     CompactProjectCard(
-//       title: 'Dashboard',
-//       count: 20,
-//       icon: Icons.dashboard_outlined,
-//       backgroundColor: const Color.fromARGB(255, 108, 107, 142),
-//       foregroundColor: Colors.white,
-//       route: '/target_dashboard',
-//     ),
-//     CompactProjectCard(
-//       title: 'Attendance',
-//       count: 20,
-//       icon: Icons.analytics_outlined,
-//       backgroundColor: const Color.fromARGB(255, 70, 90, 220),
-//       foregroundColor: Colors.white,
-//       route: '/attendance',
-//     ),
-//     // CompactProjectCard(
-//     //   title: 'Create Leads',
-//     //   count: 20,
-//     //   icon: Icons.addchart_rounded,
-//     //   backgroundColor: const Color.fromARGB(255, 155, 70, 220),
-//     //   foregroundColor: Colors.white,
-//     //   route: '/create_leads',
-//     // ),
-//     CompactProjectCard(
-//       title: 'View Leads',
-//       count: 20,
-//       icon: Icons.addchart_rounded,
-//       backgroundColor: const Color.fromARGB(185, 155, 70, 220),
-//       foregroundColor: Colors.white,
-//       route: '/view_leads',
-//     ),
-//   ];
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return _isScreenWide(context) ? _buildWebLayout() : _buildMobileLayout();
-//   }
-
-//   Widget _buildMobileLayout() {
-//     return Scaffold(
-//       key: _scaffoldKey,
-//       drawer: const AppDrawer(),
-//       backgroundColor: appTheme.scaffoldBackgroundColor,
-//       body: Column(
-//         crossAxisAlignment: CrossAxisAlignment.stretch,
-//         children: [
-//           SafeArea(
-//             bottom: false,
-//             child: HeaderModule(
-//               userName: 'Admin',
-//               bgcolor: AppColors.gray800,
-//               onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
-//             ),
-//           ),
-//           const SizedBox(height: 16),
-//           Expanded(
-//             child: Padding(
-//               padding: const EdgeInsets.symmetric(horizontal: 16),
-//               child: GridView.count(
-//                 crossAxisCount: 2,
-//                 crossAxisSpacing: 12,
-//                 mainAxisSpacing: 12,
-//                 childAspectRatio: 1.4,
-//                 children: _projectCards,
-//               ),
-//             ),
-//           ),
-//           const SizedBox(height: 16),
-//         ],
-//       ),
-//       bottomNavigationBar: SimpleNavBar(
-//         currentIndex: 0,
-//         route1: '/admin',
-//         route2: '/message_page',
-//         route3: '/create_task',
-//         route4: '/profile',
-//         icon1: Icons.home_outlined,
-//         icon2: Icons.send_rounded,
-//         icon3: Icons.add_task_outlined,
-//         icon4: Icons.person_outline,
-//         fabIcon: Icons.add_rounded,
-//         fabRoute: '/create_todo_list',
-//         activeColor: Colors.blue,
-//         inactiveColor: Colors.grey,
-//         fabColor: Colors.blue,
-//       ),
-//     );
-//   }
-
-//   Widget _buildWebLayout() {
-//     return Scaffold(
-//       backgroundColor: appTheme.scaffoldBackgroundColor,
-//       body: Row(
-//         children: [
-//           // Sidebar for web
-//           Container(
-//             width: 280,
-//             color: AppColors.gray800,
-//             child: Column(
-//               children: [
-//                 // Header section
-//                 Container(
-//                   padding: const EdgeInsets.all(24),
-//                   decoration: BoxDecoration(
-//                     color: AppColors.gray800,
-//                     boxShadow: [
-//                       BoxShadow(
-//                         color: Colors.black.withOpacity(0.1),
-//                         blurRadius: 4,
-//                         offset: const Offset(0, 2),
-//                       ),
-//                     ],
-//                   ),
-//                   child: Row(
-//                     children: [
-//                       CircleAvatar(
-//                         backgroundColor: Colors.blue,
-//                         child: const Icon(
-//                           Icons.admin_panel_settings,
-//                           color: Colors.white,
-//                         ),
-//                       ),
-//                       const SizedBox(width: 12),
-//                       Column(
-//                         crossAxisAlignment: CrossAxisAlignment.start,
-//                         mainAxisSize: MainAxisSize.min,
-//                         children: [
-//                           Text(
-//                             'Admin Panel',
-//                             style: TextStyle(
-//                               color: Colors.white,
-//                               fontSize: 18,
-//                               fontWeight: FontWeight.bold,
-//                             ),
-//                           ),
-//                           Text(
-//                             'Dashboard',
-//                             style: TextStyle(
-//                               color: Colors.white70,
-//                               fontSize: 14,
-//                             ),
-//                           ),
-//                         ],
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-
-//                 // Navigation menu
-//                 Expanded(
-//                   child: ListView(
-//                     padding: const EdgeInsets.symmetric(vertical: 16),
-//                     children: [
-//                       _buildSidebarItem(Icons.home_outlined, 'Home', '/admin'),
-//                       _buildSidebarItem(
-//                         Icons.send_rounded,
-//                         'Messages',
-//                         '/message_page',
-//                       ),
-//                       _buildSidebarItem(
-//                         Icons.add_task_outlined,
-//                         'Create Task',
-//                         '/create_task',
-//                       ),
-//                       _buildSidebarItem(
-//                         Icons.addchart_rounded,
-//                         'Create leads',
-//                         '/create_leads',
-//                       ),
-//                       _buildSidebarItem(
-//                         Icons.add_rounded,
-//                         'Create Todo',
-//                         '/create_todo_list',
-//                       ),
-//                       _buildSidebarItem(
-//                         Icons.add_link_outlined,
-//                         'Create links',
-//                         '/create_works_link_page',
-//                       ),
-//                       _buildSidebarItem(
-//                         Icons.flag_outlined,
-//                         'Create Targets',
-//                         '/create_target',
-//                       ),
-//                       _buildSidebarItem(
-//                         Icons.person_add_sharp,
-//                         'Create Teams',
-//                         '/create_team',
-//                       ),
-//                       _buildSidebarItem(
-//                         Icons.task_sharp,
-//                         'Create Daily Tasks',
-//                         '/create_daily_task',
-//                       ),
-//                       _buildSidebarItem(
-//                         Icons.account_balance,
-//                         'Create Accounts',
-//                         '/create_accounts',
-//                       ),
-//                       _buildSidebarItem(
-//                         Icons.person_outline,
-//                         'Profile',
-//                         '/profile',
-//                       ),
-//                       const Divider(color: Colors.white24, height: 32),
-//                       Padding(
-//                         padding: const EdgeInsets.symmetric(
-//                           horizontal: 16,
-//                           vertical: 8,
-//                         ),
-//                         child: Text(
-//                           'Quick Actions',
-//                           style: TextStyle(
-//                             color: Colors.white54,
-//                             fontSize: 12,
-//                             fontWeight: FontWeight.w500,
-//                           ),
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-
-//           // Main content area
-//           Expanded(
-//             child: Column(
-//               children: [
-//                 // Top bar for web
-//                 Container(
-//                   height: 60,
-//                   decoration: BoxDecoration(
-//                     color: Colors.white,
-//                     boxShadow: [
-//                       BoxShadow(
-//                         color: Colors.black.withOpacity(0.05),
-//                         blurRadius: 4,
-//                         offset: const Offset(0, 2),
-//                       ),
-//                     ],
-//                   ),
-//                   child: Padding(
-//                     padding: const EdgeInsets.symmetric(horizontal: 24),
-//                     child: Row(
-//                       children: [
-//                         Text(
-//                           'Admin Dashboard',
-//                           style: TextStyle(
-//                             fontSize: 24,
-//                             fontWeight: FontWeight.bold,
-//                             color: AppColors.gray800,
-//                           ),
-//                         ),
-//                         const Spacer(),
-//                         IconButton(
-//                           icon: Icon(
-//                             Icons.notifications_outlined,
-//                             color: AppColors.gray600,
-//                           ),
-//                           onPressed: () {},
-//                         ),
-//                         const SizedBox(width: 8),
-//                         IconButton(
-//                           icon: Icon(
-//                             Icons.settings_outlined,
-//                             color: AppColors.gray600,
-//                           ),
-//                           onPressed: () {},
-//                         ),
-//                       ],
-//                     ),
-//                   ),
-//                 ),
-
-//                 // Main grid content
-//                 Expanded(
-//                   child: Padding(
-//                     padding: const EdgeInsets.all(24),
-//                     child: GridView.builder(
-//                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-//                         crossAxisCount: _getCrossAxisCount(context),
-//                         crossAxisSpacing: 20,
-//                         mainAxisSpacing: 20,
-//                         childAspectRatio: 1.6,
-//                       ),
-//                       itemCount: _projectCards.length,
-//                       itemBuilder: (context, index) {
-//                         return _projectCards[index];
-//                       },
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildSidebarItem(IconData icon, String title, String route) {
-//     final currentRoute = GoRouterState.of(context).uri.toString();
-//     final isActive = currentRoute == route;
-
-//     return InkWell(
-//       onTap: () => context.go(route),
-//       child: Container(
-//         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-//         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-//         decoration: BoxDecoration(
-//           color: isActive ? Colors.blue.withOpacity(0.1) : Colors.transparent,
-//           borderRadius: BorderRadius.circular(8),
-//         ),
-//         child: Row(
-//           children: [
-//             Icon(
-//               icon,
-//               color: isActive ? Colors.blue : Colors.white70,
-//               size: 20,
-//             ),
-//             const SizedBox(width: 12),
-//             Text(
-//               title,
-//               style: TextStyle(
-//                 color: isActive ? Colors.blue : Colors.white70,
-//                 fontSize: 14,
-//                 fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   int _getCrossAxisCount(BuildContext context) {
-//     final width = MediaQuery.of(context).size.width;
-//     if (width > 1400) return 4;
-//     if (width > 1100) return 3;
-//     return 2;
-//   }
-// }
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
@@ -555,7 +86,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
         _isDashboardLoading = false;
       });
     } catch (e) {
-      print('Error loading dashboard data: $e');
+      debugPrint('Error loading dashboard data: $e');
       setState(() => _isDashboardLoading = false);
     }
   }
@@ -604,7 +135,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     Map<String, double> typeData = {};
     for (final target in targets) {
       final type = target['targetType'] ?? 'Unknown';
-      final value = target['targetValue'] ?? 0.0;
+      final value = (target['targetValue'] ?? 0.0).toDouble();
       typeData[type] = (typeData[type] ?? 0.0) + value;
     }
     _targetTypeData = typeData;
@@ -624,7 +155,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
         weeklyProgress[weekKey] = [];
       }
 
-      weeklyProgress[weekKey]!.add(target['progress'] ?? 0.0);
+      weeklyProgress[weekKey]!.add((target['progress'] ?? 0.0).toDouble());
     }
 
     List<Map<String, dynamic>> progressData = [];
@@ -684,12 +215,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 'Performance Dashboard',
@@ -1031,7 +562,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                 ) {
                                   return FlSpot(
                                     entry.key.toDouble(),
-                                    entry.value['progress'].toDouble(),
+                                    (entry.value['progress'] as num).toDouble(),
                                   );
                                 }).toList(),
                                 isCurved: true,
@@ -1162,8 +693,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                       0.0,
                                       (sum, value) => sum + value,
                                     );
-                                    final percentage =
-                                        (entry.value / total * 100);
+                                    final percentage = total == 0
+                                        ? 0
+                                        : (entry.value / total * 100);
 
                                     return PieChartSectionData(
                                       color: color,
@@ -1290,12 +822,28 @@ class _AdminHomePageState extends State<AdminHomePage> {
       route: '/view_todo_list',
     ),
     CompactProjectCard(
+      title: 'Create Links',
+      count: 10,
+      icon: Icons.add_link_outlined,
+      backgroundColor: const Color(0xFF5E81AC),
+      foregroundColor: Colors.white,
+      route: '/create_works_link_page',
+    ),
+    CompactProjectCard(
       title: 'View Links',
       count: 10,
       icon: Icons.link_outlined,
       backgroundColor: const Color(0xFF81A1C1),
       foregroundColor: Colors.white,
       route: '/view_works_link_page',
+    ),
+    CompactProjectCard(
+      title: 'Create Target',
+      count: 20,
+      icon: Icons.flag_outlined,
+      backgroundColor: const Color(0xFF5F7A61),
+      foregroundColor: Colors.white,
+      route: '/create_target',
     ),
     CompactProjectCard(
       title: 'View Targets',
@@ -1306,6 +854,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
       route: '/view_target',
     ),
     CompactProjectCard(
+      title: 'Create Team',
+      count: 20,
+      icon: Icons.person_add_sharp,
+      backgroundColor: const Color.fromARGB(255, 122, 121, 95),
+      foregroundColor: Colors.white,
+      route: '/create_team',
+    ),
+    CompactProjectCard(
       title: 'View Teams',
       count: 20,
       icon: Icons.people_rounded,
@@ -1314,12 +870,28 @@ class _AdminHomePageState extends State<AdminHomePage> {
       route: '/view_team_page',
     ),
     CompactProjectCard(
+      title: 'Create Daily Task',
+      count: 20,
+      icon: Icons.task_outlined,
+      backgroundColor: const Color.fromARGB(255, 122, 95, 95),
+      foregroundColor: Colors.white,
+      route: '/create_daily_task',
+    ),
+    CompactProjectCard(
       title: 'View Daily Task',
       count: 20,
       icon: Icons.task_sharp,
       backgroundColor: const Color.fromARGB(255, 142, 107, 107),
       foregroundColor: Colors.white,
       route: '/view_daily_task',
+    ),
+    CompactProjectCard(
+      title: 'Create Accounts',
+      count: 20,
+      icon: Icons.account_balance,
+      backgroundColor: const Color.fromARGB(255, 95, 121, 122),
+      foregroundColor: Colors.white,
+      route: '/create_accounts',
     ),
     CompactProjectCard(
       title: 'View Accounts',
@@ -1449,28 +1021,20 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       ],
                     ),
                   ),
-                  // Project Cards
+                  // Project Cards — **FORCE TWO COLUMNS ON MOBILE**
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final crossAxisCount = constraints.maxWidth > 600
-                            ? 2
-                            : 1;
-                        final childAspectRatio = constraints.maxWidth > 600
-                            ? 1.6
-                            : 2.0;
-
-                        return GridView.count(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: childAspectRatio,
-                          children: _projectCards,
-                        );
-                      },
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2, // 👈 two columns on mobile
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.35, // Good balance for phone screens
+                      children: _projectCards,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1536,7 +1100,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
-                        children: [
+                        children: const [
                           Text(
                             'Admin Panel',
                             style: TextStyle(
@@ -1615,8 +1179,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         '/profile',
                       ),
                       const Divider(color: Colors.white24, height: 32),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 8,
                         ),
